@@ -1,93 +1,89 @@
 import { useState, useCallback } from "react";
-import { ChevronDownIcon, XMarkIcon } from "../../assets/icons";
+import { XMarkIcon } from "../../assets/icons";
 import { FilterState } from "./types";
+import CategoryFilter from "./CategoryFilter";
+import SourceFilter from "./SourceFilter";
+import DateFilter from "./DateFilter";
 
 interface FilterBarProps {
     onChange: (filters: FilterState) => void;
 }
 
 const FilterBar = ({ onChange }: FilterBarProps) => {
-    const [filters, setFilters] = useState<FilterState>({
-        sources: [],
-        categories: [],
-        dateRange: null,
-    });
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const [selectedSources, setSelectedSources] = useState<string[]>([]);
+    const [dateRange, setDateRange] = useState({ fromDate: "", toDate: "" });
 
-    const [isSourcesOpen, setIsSourcesOpen] = useState(false);
-    const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
-    const [isDateOpen, setIsDateOpen] = useState(false);
-
-    const removeFilter = useCallback(
-        (type: keyof FilterState, value?: string) => {
-            const newFilters = {
-                ...filters,
-                [type]:
-                    type === "dateRange"
-                        ? null
-                        : filters[type].filter((item) => item !== value),
-            };
-            setFilters(newFilters);
-            onChange(newFilters); // Call onChange directly with new filters
+    const handleCategoryChange = useCallback(
+        (categories: string[]) => {
+            console.log("Selected categories:", categories); // Debug log
+            setSelectedCategories(categories);
+            const fromDate = dateRange.fromDate;
+            const toDate = dateRange.toDate;
+            onChange({
+                categories,
+                sources: selectedSources,
+                fromDate,
+                toDate,
+            });
         },
-        [filters, onChange]
+        [onChange, selectedSources, dateRange]
+    );
+
+    const handleSourceChange = useCallback(
+        (sources: string[]) => {
+            console.log("Selected sources:", sources);
+            setSelectedSources(sources);
+            const fromDate = dateRange.fromDate;
+            const toDate = dateRange.toDate;
+            onChange({
+                categories: selectedCategories,
+                sources,
+                fromDate, // Pass fromDate directly
+                toDate, // Pass toDate directly
+            });
+        },
+        [onChange, selectedCategories, dateRange]
+    );
+
+    const handleDateChange = useCallback(
+        (fromDate: string, toDate: string) => {
+            setDateRange({ fromDate, toDate });
+            onChange({
+                categories: selectedCategories,
+                sources: selectedSources,
+                fromDate, // Pass fromDate directly
+                toDate, // Pass toDate directly
+            });
+        },
+        [onChange, selectedCategories, selectedSources]
     );
 
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
-                <button
-                    onClick={() => setIsSourcesOpen(!isSourcesOpen)}
-                    className="px-3 py-2 sm:px-4 sm:py-2 border 
-                        border-gray-200 dark:border-gray-700 rounded-lg 
-                        flex items-center gap-2 
-                        bg-white dark:bg-gray-800 
-                        text-gray-900 dark:text-white
-                        hover:bg-gray-50 dark:hover:bg-gray-700 
-                        transition-colors"
-                >
-                    <span className="text-sm sm:text-base">
-                        Sources ({filters.sources.length})
-                    </span>
-                    <ChevronDownIcon className="w-4 h-4" />
-                </button>
+                <SourceFilter
+                    selectedSources={selectedSources}
+                    onSourceChange={handleSourceChange}
+                />
 
-                <button
-                    onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
-                    className="px-3 py-2 sm:px-4 sm:py-2 border 
-                        border-gray-200 dark:border-gray-700 rounded-lg 
-                        flex items-center gap-2 
-                        bg-white dark:bg-gray-800 
-                        text-gray-900 dark:text-white
-                        hover:bg-gray-50 dark:hover:bg-gray-700 
-                        transition-colors"
-                >
-                    <span className="text-sm sm:text-base">
-                        Categories ({filters.categories.length})
-                    </span>
-                    <ChevronDownIcon className="w-4 h-4" />
-                </button>
+                <CategoryFilter
+                    selectedCategories={selectedCategories}
+                    onCategoryChange={handleCategoryChange}
+                    selectedSource={selectedSources[0]} // Pass first selected source
+                />
 
-                <button
-                    onClick={() => setIsDateOpen(!isDateOpen)}
-                    className="px-3 py-2 sm:px-4 sm:py-2 border 
-                        border-gray-200 dark:border-gray-700 rounded-lg 
-                        flex items-center gap-2 
-                        bg-white dark:bg-gray-800 
-                        text-gray-900 dark:text-white
-                        hover:bg-gray-50 dark:hover:bg-gray-700 
-                        transition-colors"
-                >
-                    <span className="text-sm sm:text-base">Date Range</span>
-                    <ChevronDownIcon className="w-4 h-4" />
-                </button>
+                <DateFilter
+                    fromDate={dateRange.fromDate}
+                    toDate={dateRange.toDate}
+                    onDateChange={handleDateChange}
+                />
             </div>
 
             {/* Active Filters */}
-            {(filters.sources.length > 0 ||
-                filters.categories.length > 0 ||
-                filters.dateRange) && (
-                <div className="flex flex-wrap gap-2">
-                    {filters.sources.map((source) => (
+            {(selectedCategories.length > 0 || selectedSources.length > 0) && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                    {selectedSources.map((source) => (
                         <span
                             key={source}
                             className="inline-flex items-center gap-1 px-3 py-1 rounded-full
@@ -97,51 +93,61 @@ const FilterBar = ({ onChange }: FilterBarProps) => {
                         >
                             {source}
                             <button
-                                onClick={() => removeFilter("sources", source)}
-                                className="p-0.5 rounded-full hover:bg-blue-100 dark:hover:bg-blue-800
-                                    transition-colors"
+                                onClick={() =>
+                                    handleSourceChange(
+                                        selectedSources.filter(
+                                            (s) => s !== source
+                                        )
+                                    )
+                                }
+                                className="ml-1 hover:text-green-800 dark:hover:text-green-200"
                                 aria-label={`Remove ${source} filter`}
                             >
                                 <XMarkIcon className="w-3 h-3" />
                             </button>
                         </span>
                     ))}
-
-                    {filters.categories.map((category) => (
+                    {selectedCategories.map((category) => (
                         <span
                             key={category}
                             className="inline-flex items-center gap-1 px-3 py-1 rounded-full
-                                bg-purple-50 dark:bg-purple-900/30 
-                                text-purple-700 dark:text-purple-300
-                                text-sm border border-purple-200 dark:border-purple-800"
+                                bg-blue-50 dark:bg-blue-900/30 
+                                text-blue-700 dark:text-blue-300
+                                text-sm border border-blue-200 dark:border-blue-800"
                         >
                             {category}
                             <button
                                 onClick={() =>
-                                    removeFilter("categories", category)
+                                    handleCategoryChange(
+                                        selectedCategories.filter(
+                                            (c) => c !== category
+                                        )
+                                    )
                                 }
-                                className="p-0.5 rounded-full hover:bg-purple-100 dark:hover:bg-purple-800
-                                    transition-colors"
+                                className="ml-1 hover:text-blue-800 dark:hover:text-blue-200"
                                 aria-label={`Remove ${category} filter`}
                             >
                                 <XMarkIcon className="w-3 h-3" />
                             </button>
                         </span>
                     ))}
-
-                    {filters.dateRange && (
+                    {dateRange.fromDate && dateRange.toDate && (
                         <span
                             className="inline-flex items-center gap-1 px-3 py-1 rounded-full
-                                bg-green-50 dark:bg-green-900/30 
-                                text-green-700 dark:text-green-300
-                                text-sm border border-green-200 dark:border-green-800"
+                            bg-purple-50 dark:bg-purple-900/30 
+                            text-purple-700 dark:text-purple-300
+                            text-sm border border-purple-200 dark:border-purple-800"
                         >
-                            {filters.dateRange}
+                            {`${new Date(
+                                dateRange.fromDate
+                            ).toLocaleDateString()} - 
+                              ${new Date(
+                                  dateRange.toDate
+                              ).toLocaleDateString()}`}
                             <button
-                                onClick={() => removeFilter("dateRange")}
-                                className="p-0.5 rounded-full hover:bg-green-100 dark:hover:bg-green-800
-                                    transition-colors"
-                                aria-label="Remove date range filter"
+                                onClick={() => handleDateChange("", "")}
+                                className="ml-1 hover:text-purple-800 dark:hover:text-purple-200"
+                                aria-label="Clear date range"
                             >
                                 <XMarkIcon className="w-3 h-3" />
                             </button>

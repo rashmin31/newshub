@@ -1,5 +1,6 @@
 export interface FilterState {
     sources: string[];
     categories: string[];
-    dateRange: string | null;
+    fromDate: string;
+    toDate: string;
 }
