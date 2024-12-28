@@ -1,4 +1,8 @@
-import { UnifiedArticle, NewsSearchParams } from "../../types/news";
+import {
+    UnifiedArticle,
+    NewsSearchParams,
+    ApiMetadata,
+} from "../../types/news";
 import { guardianApi } from "./guardianApi";
 import { nyTimesApi } from "./nyTimesApi";
 import { newsApi } from "./newsApi";
@@ -185,6 +189,30 @@ class AggregatorService {
 
     hasAvailableApis(): boolean {
         return this.getAvailableApis().length > 0;
+    }
+
+    async getMetadata(): Promise<ApiMetadata> {
+        try {
+            const [guardianCats, nyTimesCats, newsApiCats] = await Promise.all([
+                guardianApi.getCategories(),
+                nyTimesApi.getCategories(),
+                newsApi.getCategories(),
+            ]);
+
+            const metadata: ApiMetadata = {
+                categories: {
+                    guardian: guardianCats,
+                    nytimes: nyTimesCats,
+                    newsapi: newsApiCats,
+                },
+                sources: ["The Guardian", "The New York Times", "NewsAPI"],
+            };
+
+            return metadata;
+        } catch (error) {
+            console.error("Error fetching API metadata:", error);
+            throw error;
+        }
     }
 }
 

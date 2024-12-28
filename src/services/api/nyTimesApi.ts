@@ -34,7 +34,7 @@ export const nyTimesApi = {
                 );
 
             const response = await fetch(
-                `${API_ENDPOINTS.NYTIMES}/articlesearch.json?${searchParams}`,
+                `${API_ENDPOINTS.NYTIMES}/search/v2/articlesearch.json?${searchParams}`,
                 { signal }
             );
 
@@ -84,5 +84,56 @@ export const nyTimesApi = {
 
     getRemainingRequests(): number {
         return rateLimiter.getRemainingRequests("nytimes");
+    },
+
+    async getCategories(): Promise<string[]> {
+        try {
+            const response = await fetch(
+                `${API_ENDPOINTS.NYTIMES}/news/v3/content/section-list.json?api-key=${API_KEYS.NYTIMES_API_KEY}`
+            );
+
+            if (!response.ok) {
+                console.warn(
+                    "Failed to fetch NY Times sections, using default sections"
+                );
+                // Fallback to default sections if API fails
+                return [
+                    "World",
+                    "U.S.",
+                    "Politics",
+                    "Business",
+                    "Technology",
+                    "Science",
+                    "Health",
+                    "Sports",
+                    "Arts",
+                    "Books",
+                    "Style",
+                    "Food",
+                    "Travel",
+                ];
+            }
+
+            const data = await response.json();
+            return data.results.map((section: any) => section.display_name);
+        } catch (error) {
+            console.error("Error fetching NY Times sections:", error);
+            // Return default sections on error
+            return [
+                "World",
+                "U.S.",
+                "Politics",
+                "Business",
+                "Technology",
+                "Science",
+                "Health",
+                "Sports",
+                "Arts",
+                "Books",
+                "Style",
+                "Food",
+                "Travel",
+            ];
+        }
     },
 };

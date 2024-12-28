@@ -6,6 +6,6 @@ export const API_KEYS = {
 
 export const API_ENDPOINTS = {
     GUARDIAN: "https://content.guardianapis.com",
-    NYTIMES: "https://api.nytimes.com/svc/search/v2",
+    NYTIMES: "https://api.nytimes.com/svc/",
     NEWSAPI: "https://newsapi.org/v2",
 };

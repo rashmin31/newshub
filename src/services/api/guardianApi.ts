@@ -31,6 +31,7 @@ export const guardianApi = {
                 searchParams.append("section", params.category);
             if (params.fromDate)
                 searchParams.append("from-date", params.fromDate);
+            if (params.toDate) searchParams.append("to-date", params.toDate);
 
             const response = await fetch(
                 `${API_ENDPOINTS.GUARDIAN}/search?${searchParams}`,
@@ -92,5 +93,58 @@ export const guardianApi = {
 
     getRemainingRequests(): number {
         return rateLimiter.getRemainingRequests("guardian");
+    },
+
+    async getCategories(): Promise<string[]> {
+        try {
+            const response = await fetch(
+                `${API_ENDPOINTS.GUARDIAN}/sections?api-key=${API_KEYS.GUARDIAN_API_KEY}`
+            );
+
+            if (!response.ok) {
+                console.warn(
+                    "Failed to fetch Guardian API sections, using default sections"
+                );
+                // Fallback to default sections if API fails
+                return [
+                    "World",
+                    "U.S.",
+                    "Politics",
+                    "Business",
+                    "Technology",
+                    "Science",
+                    "Health",
+                    "Sports",
+                    "Arts",
+                    "Books",
+                    "Style",
+                    "Food",
+                    "Travel",
+                ];
+            }
+
+            const data = await response.json();
+            return data.response.results.map(
+                (section: any) => section.webTitle
+            );
+        } catch (error) {
+            console.error("Error fetching Guardian API sections:", error);
+            // Return default sections on error
+            return [
+                "World",
+                "U.S.",
+                "Politics",
+                "Business",
+                "Technology",
+                "Science",
+                "Health",
+                "Sports",
+                "Arts",
+                "Books",
+                "Style",
+                "Food",
+                "Travel",
+            ];
+        }
     },
 };

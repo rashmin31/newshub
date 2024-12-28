@@ -103,4 +103,17 @@ export const newsApi = {
     getRemainingRequests(): number {
         return rateLimiter.getRemainingRequests("newsapi");
     },
+
+    async getCategories(): Promise<string[]> {
+        // NewsAPI has fixed categories
+        return [
+            "business",
+            "entertainment",
+            "general",
+            "health",
+            "science",
+            "sports",
+            "technology",
+        ];
+    },
 };

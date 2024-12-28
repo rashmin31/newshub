@@ -25,8 +25,8 @@ const MainContent = memo(() => {
             ...prev,
             source: filterState.sources[0] || "",
             category: filterState.categories[0] || "",
-            fromDate: filterState.dateRange?.split(" - ")[0] || "",
-            toDate: filterState.dateRange?.split(" - ")[1] || "",
+            fromDate: filterState.fromDate || "",
+            toDate: filterState.toDate || "",
         }));
     }, []);
 

@@ -117,3 +117,20 @@ export interface NewsSearchParams {
     page?: number;
     pageSize?: number;
 }
+
+export type NewsSource = "guardian" | "nytimes" | "newsapi";
+
+export interface NewsCategories {
+    [key: NewsSource]: string[]; // This won't work directly, let's fix it
+}
+
+export interface NewsCategories {
+    guardian: string[];
+    nytimes: string[];
+    newsapi: string[];
+}
+
+export interface ApiMetadata {
+    categories: NewsCategories;
+    sources: string[];
+}
