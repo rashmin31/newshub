@@ -81,7 +81,9 @@ const FilterBar = ({ onChange }: FilterBarProps) => {
             </div>
 
             {/* Active Filters */}
-            {(selectedCategories.length > 0 || selectedSources.length > 0) && (
+            {(selectedCategories.length > 0 ||
+                selectedSources.length > 0 ||
+                (dateRange.fromDate && dateRange.toDate)) && (
                 <div className="flex flex-wrap gap-2 mt-3">
                     {selectedSources.map((source) => (
                         <span
