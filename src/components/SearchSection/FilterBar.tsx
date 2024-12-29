@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { XMarkIcon } from "../../assets/icons";
 import { FilterState } from "./types";
 import CategoryFilter from "./CategoryFilter";
@@ -7,12 +7,30 @@ import DateFilter from "./DateFilter";
 
 interface FilterBarProps {
     onChange: (filters: FilterState) => void;
+    initialFilters: FilterState;
 }
 
-const FilterBar = ({ onChange }: FilterBarProps) => {
-    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [selectedSources, setSelectedSources] = useState<string[]>([]);
-    const [dateRange, setDateRange] = useState({ fromDate: "", toDate: "" });
+const FilterBar = ({ onChange, initialFilters }: FilterBarProps) => {
+    const [selectedCategories, setSelectedCategories] = useState<string[]>(
+        initialFilters.categories
+    );
+    const [selectedSources, setSelectedSources] = useState<string[]>(
+        initialFilters.sources
+    );
+    const [dateRange, setDateRange] = useState({
+        fromDate: initialFilters.fromDate,
+        toDate: initialFilters.toDate,
+    });
+
+    // Update local state when initialFilters change
+    useEffect(() => {
+        setSelectedCategories(initialFilters.categories);
+        setSelectedSources(initialFilters.sources);
+        setDateRange({
+            fromDate: initialFilters.fromDate,
+            toDate: initialFilters.toDate,
+        });
+    }, [initialFilters]);
 
     const handleCategoryChange = useCallback(
         (categories: string[]) => {
@@ -39,8 +57,8 @@ const FilterBar = ({ onChange }: FilterBarProps) => {
             onChange({
                 categories: selectedCategories,
                 sources,
-                fromDate, // Pass fromDate directly
-                toDate, // Pass toDate directly
+                fromDate,
+                toDate,
             });
         },
         [onChange, selectedCategories, dateRange]
@@ -52,38 +70,65 @@ const FilterBar = ({ onChange }: FilterBarProps) => {
             onChange({
                 categories: selectedCategories,
                 sources: selectedSources,
-                fromDate, // Pass fromDate directly
-                toDate, // Pass toDate directly
+                fromDate,
+                toDate,
             });
         },
         [onChange, selectedCategories, selectedSources]
     );
 
+    const handleResetAll = () => {
+        setSelectedCategories([]);
+        setSelectedSources([]);
+        setDateRange({ fromDate: "", toDate: "" });
+        onChange({
+            categories: [],
+            sources: [],
+            fromDate: "",
+            toDate: "",
+        });
+    };
+
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-                <SourceFilter
-                    selectedSources={selectedSources}
-                    onSourceChange={handleSourceChange}
-                />
+            <div className="flex flex-wrap items-center justify-between">
+                <div className="flex flex-wrap gap-2">
+                    <SourceFilter
+                        selectedSources={selectedSources}
+                        onSourceChange={handleSourceChange}
+                    />
 
-                <CategoryFilter
-                    selectedCategories={selectedCategories}
-                    onCategoryChange={handleCategoryChange}
-                    selectedSource={selectedSources[0]} // Pass first selected source
-                />
+                    <CategoryFilter
+                        selectedCategories={selectedCategories}
+                        onCategoryChange={handleCategoryChange}
+                        selectedSource={selectedSources[0]} // Pass first selected source
+                    />
 
-                <DateFilter
-                    fromDate={dateRange.fromDate}
-                    toDate={dateRange.toDate}
-                    onDateChange={handleDateChange}
-                />
+                    <DateFilter
+                        fromDate={dateRange.fromDate}
+                        toDate={dateRange.toDate}
+                        onDateChange={handleDateChange}
+                    />
+                </div>
+                {(selectedCategories.length > 0 ||
+                    selectedSources.length > 0 ||
+                    dateRange.fromDate) && (
+                    <button
+                        onClick={handleResetAll}
+                        className="px-3 py-2 text-sm rounded-lg bg-gray-200 dark:bg-gray-700 
+                                 text-gray-700 dark:text-gray-300
+                                 hover:bg-gray-300 dark:hover:bg-gray-600 
+                                 transition-colors"
+                    >
+                        Reset All Filters
+                    </button>
+                )}
             </div>
 
             {/* Active Filters */}
             {(selectedCategories.length > 0 ||
                 selectedSources.length > 0 ||
-                (dateRange.fromDate && dateRange.toDate)) && (
+                dateRange.fromDate) && (
                 <div className="flex flex-wrap gap-2 mt-3">
                     {selectedSources.map((source) => (
                         <span

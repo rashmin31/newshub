@@ -6,9 +6,14 @@ import { useCallback } from "react";
 interface SearchSectionProps {
     onSearch: (query: string) => void;
     onFilterChange: (filters: FilterState) => void;
+    currentFilters: FilterState;
 }
 
-const SearchSection = ({ onSearch, onFilterChange }: SearchSectionProps) => {
+const SearchSection = ({
+    onSearch,
+    onFilterChange,
+    currentFilters,
+}: SearchSectionProps) => {
     const handleFilterChange = useCallback(
         (filters: FilterState) => {
             console.log("Filters changed:", filters); // Debug log
@@ -19,7 +24,10 @@ const SearchSection = ({ onSearch, onFilterChange }: SearchSectionProps) => {
     return (
         <div className="space-y-4">
             <SearchBar onSearch={onSearch} />
-            <FilterBar onChange={handleFilterChange} />
+            <FilterBar
+                onChange={handleFilterChange}
+                initialFilters={currentFilters}
+            />
         </div>
     );
 };
