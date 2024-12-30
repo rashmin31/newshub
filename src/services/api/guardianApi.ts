@@ -30,7 +30,7 @@ export const guardianApi = {
 
             // Handle category filtering
             if (params.category) {
-                const categories = params.category.split("|");
+                const categories = params.category.split(",");
                 // Get all available categories
                 const allCategories = await this.getCategories();
                 // If all categories are selected, don't apply category filter
