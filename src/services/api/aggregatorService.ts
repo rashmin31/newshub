@@ -129,7 +129,7 @@ class AggregatorService {
         // Fetch extra items to determine if there are more pages
         const extendedParams = {
             ...params,
-            pageSize: params.pageSize + 1,
+            pageSize: params.pageSize,
         };
 
         try {
