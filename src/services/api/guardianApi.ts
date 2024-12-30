@@ -27,8 +27,19 @@ export const guardianApi = {
             });
 
             if (params.query) searchParams.append("q", params.query);
-            if (params.category)
-                searchParams.append("section", params.category);
+
+            // Handle category filtering
+            if (params.category) {
+                const categories = params.category.split("|");
+                // Get all available categories
+                const allCategories = await this.getCategories();
+                // If all categories are selected, don't apply category filter
+                if (categories.length !== allCategories.length) {
+                    // For Guardian API, only use the first category as it doesn't support multiple
+                    searchParams.append("q", params.category.toLowerCase());
+                }
+            }
+
             if (params.fromDate)
                 searchParams.append("from-date", params.fromDate);
             if (params.toDate) searchParams.append("to-date", params.toDate);
@@ -97,6 +108,7 @@ export const guardianApi = {
 
     async getCategories(): Promise<string[]> {
         try {
+            // For getting sections/categories list
             const response = await fetch(
                 `${API_ENDPOINTS.GUARDIAN}/sections?api-key=${API_KEYS.GUARDIAN_API_KEY}`
             );
@@ -116,10 +128,6 @@ export const guardianApi = {
                     "Health",
                     "Sports",
                     "Arts",
-                    "Books",
-                    "Style",
-                    "Food",
-                    "Travel",
                 ];
             }
 
@@ -140,10 +148,6 @@ export const guardianApi = {
                 "Health",
                 "Sports",
                 "Arts",
-                "Books",
-                "Style",
-                "Food",
-                "Travel",
             ];
         }
     },

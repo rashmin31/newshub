@@ -12,7 +12,6 @@ export const useNewsMetadata = () => {
         const fetchMetadata = async () => {
             try {
                 const data = await aggregatorService.getMetadata();
-                console.log("Fetched metadata:", data); // Debug log
                 setMetadata(data);
             } catch (err) {
                 console.error("Error fetching metadata:", err);

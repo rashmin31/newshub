@@ -25,13 +25,25 @@ export const nyTimesApi = {
             });
 
             if (params.query) searchParams.append("q", params.query);
-            if (params.category)
-                searchParams.append("fq", `section_name:${params.category}`);
-            if (params.fromDate)
+
+            // Handle category filtering
+            if (params.category) {
+                const categories = params.category.split(",");
+                // Get all available categories
+                const allCategories = await this.getCategories();
+
+                // If not all categories are selected, apply filter with first category
+                if (categories.length !== allCategories.length) {
+                    searchParams.append("fq", `section_name:${categories[0]}`);
+                }
+            }
+
+            if (params.fromDate) {
                 searchParams.append(
                     "begin_date",
                     params.fromDate.replace(/-/g, "")
                 );
+            }
 
             const response = await fetch(
                 `${API_ENDPOINTS.NYTIMES}/search/v2/articlesearch.json?${searchParams}`,

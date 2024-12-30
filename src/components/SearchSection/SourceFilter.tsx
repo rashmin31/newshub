@@ -1,4 +1,3 @@
-// src/components/SearchSection/SourceFilter.tsx
 import { useState, useRef, useEffect, useMemo } from "react";
 import { ChevronDownIcon } from "../../assets/icons";
 import { useNewsMetadata } from "../../hooks/useNewsMetaData";
@@ -37,7 +36,8 @@ const SourceFilter = ({
             document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const toggleSource = (source: string) => {
+    const toggleSource = (source: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent event bubbling
         if (selectedSources.includes(source)) {
             onSourceChange(selectedSources.filter((s) => s !== source));
         } else {
@@ -45,16 +45,29 @@ const SourceFilter = ({
         }
     };
 
+    const handleSelectAll = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent event bubbling
+        if (selectedSources.length === availableSources.length) {
+            onSourceChange([]); // Deselect all
+        } else {
+            onSourceChange([...availableSources]); // Select all
+        }
+    };
+
+    const isAllSelected =
+        availableSources.length > 0 &&
+        selectedSources.length === availableSources.length;
+
     return (
         <div className="relative" ref={dropdownRef}>
             <button
                 disabled={isLoading}
                 onClick={() => setIsOpen(!isOpen)}
                 className="px-3 py-2 sm:px-4 sm:py-2 border border-gray-200 
-                        dark:border-gray-700 rounded-lg flex items-center gap-2 
-                        bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                        hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors
-                        disabled:opacity-50 disabled:cursor-not-allowed"
+                          dark:border-gray-700 rounded-lg flex items-center gap-2 
+                          bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                          hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors
+                          disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-expanded={isOpen}
                 aria-haspopup="true"
             >
@@ -76,37 +89,54 @@ const SourceFilter = ({
             {isOpen && !isLoading && (
                 <div
                     className="absolute z-10 mt-2 w-56 rounded-md shadow-lg 
-                             bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5"
+                               bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5"
                 >
-                    <div className="py-1 max-h-60 overflow-auto">
-                        {availableSources.map((source) => (
-                            <div
-                                key={source}
-                                className="px-4 py-2 flex items-center hover:bg-gray-100 
-                                        dark:hover:bg-gray-700 cursor-pointer"
-                                role="menuitem"
-                                onClick={() => toggleSource(source)}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={selectedSources.includes(source)}
-                                    onChange={() => toggleSource(source)}
-                                    className="h-4 w-4 text-blue-600 rounded 
-                                            border-gray-300 focus:ring-blue-500
-                                            dark:border-gray-600 dark:bg-gray-700"
-                                    aria-label={`Select ${source} source`}
-                                />
-                                <span className="ml-3 text-gray-900 dark:text-gray-200">
-                                    {source}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                    {availableSources.length === 0 && (
-                        <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
-                            No sources available
+                    <div className="py-1">
+                        {/* Select All Option */}
+                        <div
+                            className="px-4 py-2 flex items-center hover:bg-gray-100 
+                                     dark:hover:bg-gray-700 cursor-pointer border-b 
+                                     border-gray-200 dark:border-gray-700"
+                            onClick={(e) => handleSelectAll(e)}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={isAllSelected}
+                                onChange={() => {}} // Handle change through div click
+                                className="h-4 w-4 text-blue-600 rounded 
+                                         border-gray-300 focus:ring-blue-500
+                                         dark:border-gray-600 dark:bg-gray-700"
+                            />
+                            <span className="ml-3 text-gray-900 dark:text-gray-200 font-medium">
+                                Select All
+                            </span>
                         </div>
-                    )}
+
+                        <div className="max-h-60 overflow-auto">
+                            {availableSources.map((source) => (
+                                <div
+                                    key={source}
+                                    className="px-4 py-2 flex items-center hover:bg-gray-100 
+                                             dark:hover:bg-gray-700 cursor-pointer"
+                                    onClick={(e) => toggleSource(source, e)}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedSources.includes(
+                                            source
+                                        )}
+                                        onChange={() => {}} // Handle change through div click
+                                        className="h-4 w-4 text-blue-600 rounded 
+                                                 border-gray-300 focus:ring-blue-500
+                                                 dark:border-gray-600 dark:bg-gray-700"
+                                    />
+                                    <span className="ml-3 text-gray-900 dark:text-gray-200">
+                                        {source}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

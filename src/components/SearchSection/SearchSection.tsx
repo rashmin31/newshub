@@ -16,7 +16,6 @@ const SearchSection = ({
 }: SearchSectionProps) => {
     const handleFilterChange = useCallback(
         (filters: FilterState) => {
-            console.log("Filters changed:", filters); // Debug log
             onFilterChange(filters);
         },
         [onFilterChange]

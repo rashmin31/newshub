@@ -54,19 +54,6 @@ const ArticlesSection = ({ filters }: ArticlesSectionProps) => {
         return () => controller.abort();
     }, [dispatch, filters, pageSize]);
 
-    const handleRefresh = () => {
-        dispatch(
-            fetchArticles({
-                params: {
-                    ...filters,
-                    page: currentPage,
-                    pageSize,
-                },
-                forceFetch: true,
-            })
-        );
-    };
-
     const handleRetry = () => {
         dispatch(setPage(1));
         dispatch(
@@ -96,17 +83,6 @@ const ArticlesSection = ({ filters }: ArticlesSectionProps) => {
 
     return (
         <section className="w-full">
-            <div className="mb-4 flex justify-end">
-                <button
-                    onClick={handleRefresh}
-                    className="px-3 py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 
-                             text-gray-700 dark:text-gray-300 hover:bg-gray-200 
-                             dark:hover:bg-gray-600 transition-colors"
-                >
-                    Refresh
-                </button>
-            </div>
-
             {rateLimitedApis.length > 0 && (
                 <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
                     <p className="text-yellow-800 dark:text-yellow-200">

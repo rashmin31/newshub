@@ -5,6 +5,7 @@ import SearchSection from "../SearchSection";
 import ArticlesSection from "../ArticlesSection";
 import { NewsFilters } from "../../types/news";
 import { FilterState } from "../SearchSection/types";
+import { useNewsMetadata } from "../../hooks/useNewsMetaData";
 
 const MainContent = memo(() => {
     const dispatch = useAppDispatch();
@@ -19,18 +20,46 @@ const MainContent = memo(() => {
         toDate: "",
     });
 
-    // Apply saved preferences on initial load
+    const { metadata } = useNewsMetadata();
+
+    // Apply saved preferences or default selections on initial load
     useEffect(() => {
-        if (savedPreferences) {
-            setFilters({
-                ...filters,
-                category: savedPreferences.categories[0] || "",
-                source: savedPreferences.sources[0] || "",
+        if (
+            savedPreferences?.sources.length > 0 ||
+            savedPreferences?.categories.length > 0
+        ) {
+            // Use saved preferences if they exist
+            setFilters((prev) => ({
+                ...prev,
+                category: savedPreferences.categories.join(",") || "",
+                source: savedPreferences.sources.join(",") || "",
                 fromDate: savedPreferences.dateRange?.fromDate || "",
                 toDate: savedPreferences.dateRange?.toDate || "",
-            });
+            }));
+        } else if (metadata) {
+            // Set all sources and categories as selected by default
+            const allSources = metadata.sources;
+            const allCategories = Array.from(
+                new Set(Object.values(metadata.categories).flat())
+            );
+
+            setFilters((prev) => ({
+                ...prev,
+                source: allSources.join(","),
+                category: allCategories.join(","),
+            }));
+
+            // Save to preferences
+            dispatch(
+                setPreferences({
+                    sources: allSources,
+                    categories: allCategories,
+                    authors: [],
+                    dateRange: null,
+                })
+            );
         }
-    }, []); // Empty dependency array for initial load only
+    }, [savedPreferences, metadata, dispatch]);
 
     const handleSearch = useCallback((searchQuery: string) => {
         setFilters((prev: NewsFilters) => ({
@@ -41,21 +70,20 @@ const MainContent = memo(() => {
 
     const handleFilterChange = useCallback(
         (filterState: FilterState) => {
-            // Update local filter state
+            // Update local filter state with all selected items
             setFilters((prev: NewsFilters) => ({
                 ...prev,
-                source: filterState.sources[0] || "",
-                category: filterState.categories[0] || "",
+                source: filterState.sources.join(","), // Use a separator that can be split later
+                category: filterState.categories.join(","), // Use a separator that can be split later
                 fromDate: filterState.fromDate || "",
                 toDate: filterState.toDate || "",
             }));
 
-            // Automatically save preferences when filters change
             dispatch(
                 setPreferences({
                     sources: filterState.sources,
                     categories: filterState.categories,
-                    authors: [], // Can be expanded later
+                    authors: [],
                     dateRange:
                         filterState.fromDate && filterState.toDate
                             ? {
@@ -75,8 +103,10 @@ const MainContent = memo(() => {
                 onSearch={handleSearch}
                 onFilterChange={handleFilterChange}
                 currentFilters={{
-                    sources: filters.source ? [filters.source] : [],
-                    categories: filters.category ? [filters.category] : [],
+                    sources: filters.source ? filters.source.split(",") : [],
+                    categories: filters.category
+                        ? filters.category.split(",")
+                        : [],
                     fromDate: filters.fromDate,
                     toDate: filters.toDate,
                 }}
@@ -85,5 +115,7 @@ const MainContent = memo(() => {
         </div>
     );
 });
+
+MainContent.displayName = "MainContent";
 
 export default MainContent;

@@ -21,8 +21,8 @@ interface ApiStatus {
 
 class AggregatorService {
     private readonly apis: ApiSource[] = [
-        { api: guardianApi, name: "Guardian" },
-        { api: nyTimesApi, name: "NY Times" },
+        { api: guardianApi, name: "The Guardian" },
+        { api: nyTimesApi, name: "The New York Times" },
         { api: newsApi, name: "NewsAPI" },
     ];
 
@@ -36,9 +36,36 @@ class AggregatorService {
         const results: UnifiedArticle[][] = [];
         const rateLimitedApis: string[] = [];
 
-        for (const { api, name } of this.apis) {
+        // Split the source parameter if it exists
+        const selectedSources = params.source ? params.source.split(",") : [];
+
+        // Determine which APIs to call
+        const apisToCall =
+            selectedSources.length > 0
+                ? this.apis.filter(({ name }) => selectedSources.includes(name))
+                : [];
+
+        // If no APIs to call, return early
+        if (apisToCall.length === 0) {
+            console.warn(
+                "No sources selected or available. Skipping API calls."
+            );
+            return {
+                articles: [],
+                rateLimitedApis: [],
+            };
+        }
+
+        for (const { api, name } of apisToCall) {
             try {
-                const articles = await api.fetchArticles(params, signal);
+                // Create a new params object without the source parameter
+                // as each API already knows its own source
+                const apiParams = {
+                    ...params,
+                    source: undefined, // Remove source from params as it's handled by each API
+                };
+
+                const articles = await api.fetchArticles(apiParams, signal);
                 results.push(articles);
             } catch (error: any) {
                 if (error.name === "AbortError") {
@@ -53,15 +80,14 @@ class AggregatorService {
                     continue;
                 }
                 console.error(`${name} API error:`, error);
-                // For non-rate-limit errors, still continue with other APIs
                 continue;
             }
         }
 
         // If all APIs are rate limited, throw error
-        if (rateLimitedApis.length === this.apis.length) {
+        if (rateLimitedApis.length === apisToCall.length) {
             throw new RateLimitError(
-                "All news sources are currently rate limited. Please try again later."
+                "All selected news sources are currently rate limited. Please try again later."
             );
         }
 
@@ -123,72 +149,6 @@ class AggregatorService {
             console.error("Error fetching paginated articles:", error);
             throw error;
         }
-    }
-
-    async searchArticles(params: NewsSearchParams): Promise<{
-        articles: UnifiedArticle[];
-        rateLimitedApis: string[];
-    }> {
-        try {
-            // First try with exact parameters
-            const result = await this.fetchAllArticles(params);
-
-            // If no results, try with relaxed parameters
-            if (result.articles.length === 0 && params.query) {
-                // Try with just the search query, removing other filters
-                return await this.fetchAllArticles({ query: params.query });
-            }
-
-            return result;
-        } catch (error) {
-            console.error("Error searching articles:", error);
-            throw error;
-        }
-    }
-
-    async fetchArticlesByCategory(
-        category: string,
-        params: Omit<NewsSearchParams, "category">
-    ): Promise<{
-        articles: UnifiedArticle[];
-        rateLimitedApis: string[];
-    }> {
-        return this.fetchAllArticles({ ...params, category });
-    }
-
-    async fetchArticlesBySource(
-        source: string,
-        params: Omit<NewsSearchParams, "source">
-    ): Promise<{
-        articles: UnifiedArticle[];
-        rateLimitedApis: string[];
-    }> {
-        return this.fetchAllArticles({ ...params, source });
-    }
-
-    async fetchArticlesByDateRange(
-        fromDate: string,
-        toDate: string,
-        params: Omit<NewsSearchParams, "fromDate" | "toDate">
-    ): Promise<{
-        articles: UnifiedArticle[];
-        rateLimitedApis: string[];
-    }> {
-        return this.fetchAllArticles({ ...params, fromDate, toDate });
-    }
-
-    getAvailableApis(): string[] {
-        return this.apis
-            .filter(({ name }) =>
-                rateLimiter.checkLimit(
-                    name.toLowerCase().replace(" ", "") as any
-                )
-            )
-            .map(({ name }) => name);
-    }
-
-    hasAvailableApis(): boolean {
-        return this.getAvailableApis().length > 0;
     }
 
     async getMetadata(): Promise<ApiMetadata> {

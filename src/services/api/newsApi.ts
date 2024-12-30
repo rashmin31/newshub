@@ -27,18 +27,57 @@ export const newsApi = {
             apiKey: API_KEYS.NEWSAPI_API_KEY,
             pageSize: params.pageSize?.toString() || "10",
             page: params.page?.toString() || "1",
+            sortBy: "publishedAt",
         };
+
+        // Define valid NewsAPI categories
+        const validCategories = [
+            "business",
+            "entertainment",
+            "general",
+            "health",
+            "science",
+            "sports",
+            "technology",
+        ];
 
         let endpoint = "/everything";
 
         if (params.category) {
-            endpoint = "/top-headlines";
-            searchParamsObj.category = params.category;
+            const categories = params.category.split(",");
+            const validSelectedCategories = categories.filter((cat) =>
+                validCategories.includes(cat.toLowerCase())
+            );
+
+            // Get all available categories
+            const allCategories = await this.getCategories();
+
+            // Only use top-headlines with category if not all categories are selected
+            // and exactly one valid category is selected
+            if (
+                categories.length !== allCategories.length &&
+                validSelectedCategories.length === 1
+            ) {
+                endpoint = "/top-headlines";
+                searchParamsObj.category =
+                    validSelectedCategories[0].toLowerCase();
+            } else {
+                searchParamsObj.q = params.query || "news";
+                if (params.fromDate) {
+                    searchParamsObj.from = params.fromDate;
+                } else {
+                    searchParamsObj.from = oneMonthAgo
+                        .toISOString()
+                        .split("T")[0];
+                }
+            }
         } else {
             searchParamsObj.q = params.query || "news";
-            searchParamsObj.sortBy = "publishedAt";
-            searchParamsObj.from =
-                params.fromDate || oneMonthAgo.toISOString().split("T")[0];
+            if (params.fromDate) {
+                searchParamsObj.from = params.fromDate;
+            } else {
+                searchParamsObj.from = oneMonthAgo.toISOString().split("T")[0];
+            }
         }
 
         const searchParams = new URLSearchParams(searchParamsObj);
@@ -88,7 +127,7 @@ export const newsApi = {
                 source: article.source.name,
                 url: article.url,
                 urlToImage: article.urlToImage,
-                category: params.category || "general",
+                category: "",
                 author: article.author || undefined,
             }));
         } catch (error: any) {
@@ -107,13 +146,19 @@ export const newsApi = {
     async getCategories(): Promise<string[]> {
         // NewsAPI has fixed categories
         return [
-            "business",
-            "entertainment",
-            "general",
-            "health",
-            "science",
-            "sports",
-            "technology",
+            "World",
+            "U.S.",
+            "Politics",
+            "Business",
+            "Technology",
+            "Science",
+            "Health",
+            "Sports",
+            "Arts",
+            "Books",
+            "Style",
+            "Food",
+            "Travel",
         ];
     },
 };
