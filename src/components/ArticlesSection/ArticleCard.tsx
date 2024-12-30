@@ -21,11 +21,16 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
         }
     };
 
+    const handleArticleClick = (url: string) => {
+        window.open(url, "_blank", "noopener,noreferrer");
+    };
+
     return (
         <article
             className="bg-white dark:bg-gray-800 rounded-lg 
                       shadow-sm hover:shadow-md dark:shadow-gray-700/50 
                       transition-shadow duration-200"
+            onClick={() => handleArticleClick(article.url)}
         >
             <div className="aspect-video relative overflow-hidden rounded-t-lg">
                 <img
@@ -49,7 +54,7 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
                 <h2
                     className="text-lg sm:text-xl font-semibold 
                              text-gray-900 dark:text-white 
-                             line-clamp-2 mb-2"
+                             line-clamp-2 mb-2 hover:text-blue-500 dark:hover:text-blue-500"
                 >
                     {article.title}
                 </h2>
