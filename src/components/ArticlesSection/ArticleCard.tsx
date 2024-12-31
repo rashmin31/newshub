@@ -1,4 +1,6 @@
+// src/components/ArticlesSection/ArticleCard.tsx
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Article } from "./types";
 
 const defaultPlaceholder =
@@ -9,6 +11,7 @@ interface ArticleCardProps {
 }
 
 const ArticleCard = ({ article }: ArticleCardProps) => {
+    const navigate = useNavigate();
     const [imgSrc, setImgSrc] = useState(
         article.urlToImage || defaultPlaceholder
     );
@@ -21,16 +24,18 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
         }
     };
 
-    const handleArticleClick = (url: string) => {
-        window.open(url, "_blank", "noopener,noreferrer");
+    const handleArticleClick = () => {
+        // Ensure the articleId is properly URL-encoded
+        const encodedId = encodeURIComponent(article.articleId);
+        navigate(`/article/${encodedId}`);
     };
 
     return (
         <article
             className="bg-white dark:bg-gray-800 rounded-lg 
                       shadow-sm hover:shadow-md dark:shadow-gray-700/50 
-                      transition-shadow duration-200"
-            onClick={() => handleArticleClick(article.url)}
+                      transition-shadow duration-200 cursor-pointer"
+            onClick={handleArticleClick}
         >
             <div className="aspect-video relative overflow-hidden rounded-t-lg">
                 <img
@@ -43,7 +48,7 @@ const ArticleCard = ({ article }: ArticleCardProps) => {
                 <div className="absolute top-2 left-2 sm:top-4 sm:left-4">
                     <span
                         className="inline-block px-2 py-1 text-xs sm:text-sm 
-                                 text-white bg-blue-600 dark:bg-blue-500 rounded"
+                                   text-white bg-blue-600 dark:bg-blue-500 rounded"
                     >
                         {article.source}
                     </span>

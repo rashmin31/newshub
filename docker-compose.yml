@@ -15,10 +15,14 @@ services:
             - NODE_ENV=development
             - CHOKIDAR_USEPOLLING=true
 
-    # Production service
-    newshub-prod:
+    # Test service
+    newshub-test:
         build:
             context: .
-            dockerfile: Dockerfile
-        ports:
-            - "80:80"
+            dockerfile: Dockerfile.dev
+        volumes:
+            - ./src:/app/src
+            - ./public:/app/public
+        environment:
+            - NODE_ENV=test
+        command: ["yarn", "test"]

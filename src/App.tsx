@@ -1,17 +1,15 @@
 // src/App.tsx
-import { BrowserRouter as Router } from "react-router-dom";
-import Layout from "./components/Layout";
+import { RouterProvider } from "react-router-dom";
 import { Provider } from "react-redux";
 import { persistor, store } from "./store";
 import { PersistGate } from "redux-persist/integration/react";
+import { router } from "./routes";
 
 const App = () => {
     return (
         <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
-                <Router>
-                    <Layout />
-                </Router>
+                <RouterProvider router={router} />
             </PersistGate>
         </Provider>
     );
