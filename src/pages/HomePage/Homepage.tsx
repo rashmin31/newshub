@@ -1,60 +1,122 @@
-const HomePage = () => {
+// src/pages/HomePage/HomePage.tsx
+import { useState, useCallback, memo, useEffect } from "react";
+import { useAppSelector, useAppDispatch } from "../../store/hooks";
+import { setPreferences } from "../../store/slices/preferencesSlice";
+import SearchSection from "../../components/SearchSection";
+import ArticlesSection from "../../components/ArticlesSection";
+import { NewsFilters } from "../../types/news";
+import { FilterState } from "../../components/SearchSection/types";
+import { useNewsMetadata } from "../../hooks/useNewsMetaData";
+
+const HomePage = memo(() => {
+    const dispatch = useAppDispatch();
+    const savedPreferences = useAppSelector(
+        (state) => state.preferences.preferences
+    );
+    const [filters, setFilters] = useState<NewsFilters>({
+        query: "",
+        category: "",
+        source: "",
+        fromDate: "",
+        toDate: "",
+    });
+
+    const { metadata } = useNewsMetadata();
+
+    // Apply saved preferences or default selections on initial load
+    useEffect(() => {
+        if (
+            savedPreferences?.sources.length > 0 ||
+            savedPreferences?.categories.length > 0
+        ) {
+            // Use saved preferences if they exist
+            setFilters((prev) => ({
+                ...prev,
+                category: savedPreferences.categories.join(",") || "",
+                source: savedPreferences.sources.join(",") || "",
+                fromDate: savedPreferences.dateRange?.fromDate || "",
+                toDate: savedPreferences.dateRange?.toDate || "",
+            }));
+        } else if (metadata) {
+            // Set all sources and categories as selected by default
+            const allSources = metadata.sources;
+            const allCategories = Array.from(
+                new Set(Object.values(metadata.categories).flat())
+            );
+
+            setFilters((prev) => ({
+                ...prev,
+                source: allSources.join(","),
+                category: allCategories.join(","),
+            }));
+
+            // Save to preferences
+            dispatch(
+                setPreferences({
+                    sources: allSources,
+                    categories: allCategories,
+                    authors: [],
+                    dateRange: null,
+                })
+            );
+        }
+    }, [savedPreferences, metadata, dispatch]);
+
+    const handleSearch = useCallback((searchQuery: string) => {
+        setFilters((prev: NewsFilters) => ({
+            ...prev,
+            query: searchQuery,
+        }));
+    }, []);
+
+    const handleFilterChange = useCallback(
+        (filterState: FilterState) => {
+            // Update local filter state with all selected items
+            setFilters((prev: NewsFilters) => ({
+                ...prev,
+                source: filterState.sources.join(","),
+                category: filterState.categories.join(","),
+                fromDate: filterState.fromDate || "",
+                toDate: filterState.toDate || "",
+            }));
+
+            dispatch(
+                setPreferences({
+                    sources: filterState.sources,
+                    categories: filterState.categories,
+                    authors: [],
+                    dateRange:
+                        filterState.fromDate && filterState.toDate
+                            ? {
+                                  fromDate: filterState.fromDate,
+                                  toDate: filterState.toDate,
+                              }
+                            : null,
+                })
+            );
+        },
+        [dispatch]
+    );
+
     return (
-        <div className="min-h-screen bg-gray-100">
-            {/* Header Section - Mobile First */}
-            <div className="bg-white shadow">
-                <div className="px-4 py-4 md:py-6 max-w-7xl mx-auto">
-                    <h1 className="text-xl md:text-3xl font-bold">NewsHub</h1>
-                </div>
-            </div>
-
-            <main className="px-4 py-4 md:py-6 max-w-7xl mx-auto">
-                {/* Search and Filter Section */}
-                <div className="space-y-3 mb-4 md:mb-6">
-                    {/* Search Bar placeholder */}
-                    <div className="h-10 md:h-12 bg-white shadow rounded-lg flex items-center px-4">
-                        Search
-                    </div>
-
-                    {/* Filter Bar placeholder - Horizontal scrolling on mobile */}
-                    <div className="flex overflow-x-auto gap-2 pb-2">
-                        <div className="flex-none px-4 h-8 md:h-10 bg-white shadow rounded-lg flex items-center">
-                            Sources
-                        </div>
-                        <div className="flex-none px-4 h-8 md:h-10 bg-white shadow rounded-lg flex items-center">
-                            Categories
-                        </div>
-                        <div className="flex-none px-4 h-8 md:h-10 bg-white shadow rounded-lg flex items-center">
-                            Date
-                        </div>
-                    </div>
-                </div>
-
-                {/* Articles Section - Single column on mobile, grid on larger screens */}
-                <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 lg:gap-6">
-                    {[1, 2, 3, 4, 5, 6].map((item) => (
-                        <div
-                            key={item}
-                            className="bg-white shadow rounded-lg p-4 h-48 md:h-64"
-                        >
-                            {/* Article Card Structure */}
-                            <div className="flex flex-col h-full">
-                                <div className="h-24 md:h-32 bg-gray-200 rounded-md mb-2">
-                                    Image placeholder
-                                </div>
-                                <h2 className="font-semibold">
-                                    Article Title {item}
-                                </h2>
-                                <p className="text-sm text-gray-600 mt-1">
-                                    Short description...
-                                </p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </main>
+        <div className="space-y-4 sm:space-y-6">
+            <SearchSection
+                onSearch={handleSearch}
+                onFilterChange={handleFilterChange}
+                currentFilters={{
+                    sources: filters.source ? filters.source.split(",") : [],
+                    categories: filters.category
+                        ? filters.category.split(",")
+                        : [],
+                    fromDate: filters.fromDate,
+                    toDate: filters.toDate,
+                }}
+            />
+            <ArticlesSection filters={filters} />
         </div>
     );
-};
+});
+
+HomePage.displayName = "HomePage";
 
 export default HomePage;

@@ -193,7 +193,7 @@ const DateFilter = ({ fromDate, toDate, onDateChange }: DateFilterProps) => {
                 <div
                     className="absolute z-50 mt-2 p-4 bg-white dark:bg-gray-800 
                              rounded-lg shadow-lg border border-gray-200 
-                             dark:border-gray-700 w-[300px]"
+                             dark:border-gray-700 w-[300px] dark:text-white"
                 >
                     {/* Quick selects */}
                     <div className="mb-4 space-y-1">
@@ -277,7 +277,7 @@ const DateFilter = ({ fromDate, toDate, onDateChange }: DateFilterProps) => {
                                     }
                                     ${
                                         day.isSelected
-                                            ? "bg-blue-500 text-white"
+                                            ? "bg-blue-500 text-white dark:bg-blue-900"
                                             : ""
                                     }
                                 `}

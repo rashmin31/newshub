@@ -12,7 +12,6 @@ export function useFilter({
     selectedItems,
     onItemChange,
     availableItems,
-    filterName,
 }: UseFilterProps) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);

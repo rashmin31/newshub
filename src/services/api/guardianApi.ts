@@ -57,7 +57,10 @@ const buildSearchParams = async (
         // Get all available categories
         const allCategories = await guardianApi.getCategories();
         if (categories.length < allCategories.length) {
-            const categoryQuery = params.category.toLowerCase();
+            const categoryQuery = params.category
+                .split(",")
+                .join(" OR ")
+                .toLowerCase();
             const existingQuery = searchParams.get("q");
             searchParams.set(
                 "q",
