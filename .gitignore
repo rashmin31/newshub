@@ -31,7 +31,7 @@ coverage
 build
 
 #Misc
-.env
+# .env
 .env.local
 .env.development.local
 .env.test.local
