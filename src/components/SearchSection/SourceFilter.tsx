@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+// src/components/SearchSection/SourceFilter.tsx
 import { ChevronDownIcon } from "../../assets/icons";
 import { useNewsMetadata } from "../../hooks/useNewsMetaData";
+import { useFilter } from "../../hooks/useFilter";
 
 interface SourceFilterProps {
     selectedSources: string[];
@@ -11,52 +12,24 @@ const SourceFilter = ({
     selectedSources,
     onSourceChange,
 }: SourceFilterProps) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
     const { metadata, isLoading } = useNewsMetadata();
 
     // Get available sources from metadata
-    const availableSources = useMemo(() => {
-        if (!metadata) return [];
-        return metadata.sources.sort();
-    }, [metadata]);
+    const availableSources = metadata?.sources.sort() || [];
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                dropdownRef.current &&
-                !dropdownRef.current.contains(event.target as Node)
-            ) {
-                setIsOpen(false);
-            }
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () =>
-            document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const toggleSource = (source: string, e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent event bubbling
-        if (selectedSources.includes(source)) {
-            onSourceChange(selectedSources.filter((s) => s !== source));
-        } else {
-            onSourceChange([...selectedSources, source]);
-        }
-    };
-
-    const handleSelectAll = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent event bubbling
-        if (selectedSources.length === availableSources.length) {
-            onSourceChange([]); // Deselect all
-        } else {
-            onSourceChange([...availableSources]); // Select all
-        }
-    };
-
-    const isAllSelected =
-        availableSources.length > 0 &&
-        selectedSources.length === availableSources.length;
+    const {
+        isOpen,
+        setIsOpen,
+        dropdownRef,
+        toggleItem,
+        handleSelectAll,
+        isAllSelected,
+    } = useFilter({
+        selectedItems: selectedSources,
+        onItemChange: onSourceChange,
+        availableItems: availableSources,
+        filterName: "Sources",
+    });
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -80,7 +53,7 @@ const SourceFilter = ({
                         </span>
                         <ChevronDownIcon
                             className={`w-4 h-4 transition-transform duration-200 
-                            ${isOpen ? "transform rotate-180" : ""}`}
+                                ${isOpen ? "transform rotate-180" : ""}`}
                         />
                     </>
                 )}
@@ -97,7 +70,7 @@ const SourceFilter = ({
                             className="px-4 py-2 flex items-center hover:bg-gray-100 
                                      dark:hover:bg-gray-700 cursor-pointer border-b 
                                      border-gray-200 dark:border-gray-700"
-                            onClick={(e) => handleSelectAll(e)}
+                            onClick={handleSelectAll}
                         >
                             <input
                                 type="checkbox"
@@ -118,7 +91,7 @@ const SourceFilter = ({
                                     key={source}
                                     className="px-4 py-2 flex items-center hover:bg-gray-100 
                                              dark:hover:bg-gray-700 cursor-pointer"
-                                    onClick={(e) => toggleSource(source, e)}
+                                    onClick={(e) => toggleItem(source, e)}
                                 >
                                     <input
                                         type="checkbox"

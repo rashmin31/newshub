@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+// src/components/SearchSection/CategoryFilter.tsx
 import { ChevronDownIcon } from "../../assets/icons";
 import { useNewsMetadata } from "../../hooks/useNewsMetaData";
-import { NewsCategories } from "../../types/news";
+import { useFilter } from "../../hooks/useFilter";
+import { sourceToApiKey } from "../../utils/sourceMapping";
 
 interface CategoryFilterProps {
     selectedCategories: string[];
@@ -9,29 +10,14 @@ interface CategoryFilterProps {
     selectedSources: string[];
 }
 
-const sourceToApiKey = (source: string): keyof NewsCategories => {
-    switch (source) {
-        case "The Guardian":
-            return "guardian";
-        case "The New York Times":
-            return "nytimes";
-        case "NewsAPI":
-            return "newsapi";
-        default:
-            return "guardian";
-    }
-};
-
 const CategoryFilter = ({
     selectedCategories,
     onCategoryChange,
     selectedSources,
 }: CategoryFilterProps) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
     const { metadata, isLoading } = useNewsMetadata();
 
-    // Get categories based on selected source or all unique categories
+    // Get categories based on selected sources or all unique categories
     const availableCategories = metadata
         ? selectedSources.length > 0
             ? Array.from(
@@ -49,42 +35,19 @@ const CategoryFilter = ({
               ).sort()
         : [];
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                dropdownRef.current &&
-                !dropdownRef.current.contains(event.target as Node)
-            ) {
-                setIsOpen(false);
-            }
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () =>
-            document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const toggleCategory = (category: string, e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent event bubbling
-        if (selectedCategories.includes(category)) {
-            onCategoryChange(selectedCategories.filter((c) => c !== category));
-        } else {
-            onCategoryChange([...selectedCategories, category]);
-        }
-    };
-
-    const handleSelectAll = (e: React.MouseEvent) => {
-        e.stopPropagation(); // Prevent event bubbling
-        if (selectedCategories.length === availableCategories.length) {
-            onCategoryChange([]); // Deselect all
-        } else {
-            onCategoryChange([...availableCategories]); // Select all
-        }
-    };
-
-    const isAllSelected =
-        availableCategories.length > 0 &&
-        selectedCategories.length === availableCategories.length;
+    const {
+        isOpen,
+        setIsOpen,
+        dropdownRef,
+        toggleItem,
+        handleSelectAll,
+        isAllSelected,
+    } = useFilter({
+        selectedItems: selectedCategories,
+        onItemChange: onCategoryChange,
+        availableItems: availableCategories,
+        filterName: "Categories",
+    });
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -108,7 +71,7 @@ const CategoryFilter = ({
                         </span>
                         <ChevronDownIcon
                             className={`w-4 h-4 transition-transform duration-200 
-                            ${isOpen ? "transform rotate-180" : ""}`}
+                                ${isOpen ? "transform rotate-180" : ""}`}
                         />
                     </>
                 )}
@@ -125,7 +88,7 @@ const CategoryFilter = ({
                             className="px-4 py-2 flex items-center hover:bg-gray-100 
                                      dark:hover:bg-gray-700 cursor-pointer border-b 
                                      border-gray-200 dark:border-gray-700"
-                            onClick={(e) => handleSelectAll(e)}
+                            onClick={handleSelectAll}
                         >
                             <input
                                 type="checkbox"
@@ -146,7 +109,7 @@ const CategoryFilter = ({
                                     key={category}
                                     className="px-4 py-2 flex items-center hover:bg-gray-100 
                                              dark:hover:bg-gray-700 cursor-pointer"
-                                    onClick={(e) => toggleCategory(category, e)}
+                                    onClick={(e) => toggleItem(category, e)}
                                 >
                                     <input
                                         type="checkbox"
